@@ -1,13 +1,7 @@
 """Contains various utility functions."""
 
-import time
-import cProfile
-import pstats
-import io
 from urllib import parse
-from functools import wraps
 from bs4 import BeautifulSoup
-
 from .settings import DICTS
 
 
@@ -62,33 +56,3 @@ def get_request_url_spellcheck(url, input_word):
     request_url = url + query_word
 
     return request_url
-
-
-def profile(func):
-    """A decorator that uses cProfile to profile a function"""
-
-    def inner(*args, **kwargs):
-        pr = cProfile.Profile()
-        pr.enable()
-        retval = func(*args, **kwargs)
-        pr.disable()
-        s = io.StringIO()
-        sortby = "cumulative"
-        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-        ps.print_stats()
-        print(s.getvalue())
-        return retval
-
-    return inner
-
-
-def timer(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        start_at = time.time()
-        f = func(*args, **kwargs)
-        time_taken = round((time.time() - start_at), 2)
-        print("\nTime taken: {} seconds".format(time_taken))
-        return f
-
-    return wrapper

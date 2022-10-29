@@ -19,4 +19,4 @@ logging.basicConfig(
 
 logger = logging.getLogger(
     __package__
-)  # if imported, all modules will have the same logger called by name of __package__'s value'
+)  # if imported, all modules will have the same logger called by name of __package__'s value

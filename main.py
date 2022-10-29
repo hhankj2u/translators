@@ -1,14 +1,11 @@
-import copy
 import sqlite3
-import sys
-from io import StringIO
+import threading
+import pyperclip
 import wx
 import wx.html2
-from ansi2html import Ansi2HTMLConverter
-from cambridge import cache
-from cambridge.args import parse_args
-import pyperclip
-import threading
+from core import cache
+from core.dicts import cambridge, webster
+from core.settings import DICTS, CAMBRIDGE, WEBSTER
 
 
 # https://stackoverflow.com/a/16368571/6408343
@@ -39,62 +36,50 @@ class AppPanel(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
 
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        # btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.browser = wx.html2.WebView.New(self)
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.browser_cambridge = wx.html2.WebView.New(self)
+        self.browser_webster = wx.html2.WebView.New(self)
 
-        # btn_translate = wx.Button(self, -1, "Translate")
-        # btn_translate.Bind(wx.EVT_BUTTON, self.btn_translate_on_clicked)
-        # btn_sizer.Add(btn_translate, 0, wx.ALIGN_CENTER)
-
-        # sizer.Add(btn_sizer, 0, wx.EXPAND)
-        sizer.Add(self.browser, 1, wx.EXPAND)
+        sizer.Add(self.browser_cambridge, 1, wx.EXPAND)
+        sizer.Add(self.browser_webster, 1, wx.EXPAND)
         self.SetSizer(sizer)
 
-        self.conv = Ansi2HTMLConverter()
-
-        self.word = ''
+        self.word = 'banana'
         self.old_word = ''
-        self.default_argv = copy.deepcopy(sys.argv)
-        self.btn_translate_on_clicked()
+        self.interval_translate_clipboard()
 
-    @set_interval(3)
-    def btn_translate_on_clicked(self):
+    @set_interval(2)
+    def interval_translate_clipboard(self):
         self.word = pyperclip.paste()
         if not self.word or self.old_word == self.word:
             return
         self.old_word = self.word
-        sys.argv = copy.deepcopy(self.default_argv)
-        stream = StringIO()
-        sys.stdout = stream
 
-        self.translate('cambridge')
-        self.translate('webster')
-        html = self.conv.convert(stream.getvalue())
-        self.browser.SetPage(html, "")
-        sys.stdout = sys.__stdout__
+        url, soup = self.translate(DICTS[CAMBRIDGE])
+        self.browser_cambridge.SetPage(str(soup), url)
+        url, soup = self.translate(DICTS[WEBSTER])
+        self.browser_webster.SetPage(str(soup), url)
 
     def translate(self, dictionary):
-        cache_db = "cambridge.db"
-        if dictionary == 'webster':
-            sys.argv.append('-w')
-            cache_db = "webster.db"
-        else:
-            sys.argv += [self.word]
         con = sqlite3.connect(
-            str(cache.dir / cache_db), detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES
+            str(cache.dir / dictionary), detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES
         )
         cur = con.cursor()
 
-        args = parse_args()
-        args.func(args, con, cur)
+        if dictionary == DICTS[CAMBRIDGE]:
+            url, soup = cambridge.search_cambridge(con, cur, self.word)
+        else:
+            url, soup = webster.search_webster(con, cur, self.word)
+
         cur.close()
         con.close()
+
+        return url, soup
 
 
 if __name__ == '__main__':
     app = wx.App()
-    window = wx.Frame(None, -1, "Translators", wx.DefaultPosition, size=(800, 800))
+    window = wx.Frame(None, -1, "Translators", wx.DefaultPosition, size=(1000, 800))
     panel = AppPanel(window)
     window.Show()
     app.MainLoop()
