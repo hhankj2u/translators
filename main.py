@@ -59,7 +59,6 @@ class AppPanel(wx.Panel):
 
         self.word = 'banana'
         self.old_word = ''
-        self.is_enter = False
         self.is_disable_auto = False
 
         # init
@@ -67,10 +66,9 @@ class AppPanel(wx.Panel):
 
     @set_interval(2)
     def interval_translate_clipboard(self):
-        if self.is_enter == False:
-            if self.is_disable_auto == True:
-                return
+        if self.is_disable_auto == False:
             self.word = pyperclip.paste()
+
         if not self.word or self.old_word == self.word:
             return
         self.old_word = self.word
@@ -79,11 +77,7 @@ class AppPanel(wx.Panel):
         self.browser_cambridge.SetPage(str(soup), url)
         url, soup = self.translate(DICTS[WEBSTER])
         self.browser_webster.SetPage(str(soup), url)
-        
-        # reset enter button
-        if self.is_enter == True:
-            self.is_enter = False
-
+    
     def translate(self, dictionary):
         con = sqlite3.connect(
             str(cache.dir / dictionary), detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES
@@ -102,7 +96,6 @@ class AppPanel(wx.Panel):
 
     def OnEnterPressed(self, event):
         self.word = event.GetString()
-        self.is_enter = True
         self.interval_translate_clipboard()
         print(f"Enter pressed: {self.word}")
 

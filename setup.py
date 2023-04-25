@@ -4,7 +4,7 @@ APP = ['main.py']
 DATA_FILES = []
 OPTIONS = {
     'optimize': 2,
-    'includes': ['wx', 'pyperclip'],
+    'includes': ['wx', 'pyperclip', 'chardet', 'cchardet'],
     'excludes': ['numpy', 'gtk'],
     'plist': {
         'CFBundleName': 'Translators',

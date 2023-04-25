@@ -5,8 +5,9 @@
 ```shell
 python3 setup.py py2app
 ```
-
+## v0.0.3
+![screenshot](screenshot/0.0.3.png)
 ## v0.0.2
-![screenshot2](screenshot2.png)
+![screenshot](screenshot/0.0.2.png)
 ## v0.0.1
-![screenshot1](screenshot.png)
+![screenshot](screenshot/0.0.1.png)
