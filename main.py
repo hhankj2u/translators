@@ -36,21 +36,41 @@ class AppPanel(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
 
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_container = wx.BoxSizer(wx.VERTICAL)
+       
+        sizer_top = wx.BoxSizer(wx.HORIZONTAL)
+        self.txt_input = wx.TextCtrl(self, style = wx.TE_PROCESS_ENTER)
+        self.txt_input.Bind(wx.EVT_TEXT_ENTER, self.OnEnterPressed)        
+        sizer_top.Add(self.txt_input, -1, wx.EXPAND)
+        self.cb_disable = wx.CheckBox(self, label = 'Disable Ctrl+C')
+        self.Bind(wx.EVT_CHECKBOX, self.onChecked) 
+        sizer_top.Add(self.cb_disable, 0)
+        sizer_container.Add(sizer_top, 0, wx.EXPAND)
+
         self.browser_cambridge = wx.html2.WebView.New(self)
         self.browser_webster = wx.html2.WebView.New(self)
 
-        sizer.Add(self.browser_cambridge, 1, wx.EXPAND)
-        sizer.Add(self.browser_webster, 1, wx.EXPAND)
-        self.SetSizer(sizer)
+        sizer_result = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_result.Add(self.browser_cambridge, 1, wx.EXPAND)
+        sizer_result.Add(self.browser_webster, 1, wx.EXPAND)
+        sizer_container.Add(sizer_result, 1, wx.EXPAND)
+
+        self.SetSizer(sizer_container)        
 
         self.word = 'banana'
         self.old_word = ''
+        self.is_enter = False
+        self.is_disable_auto = False
+
+        # init
         self.interval_translate_clipboard()
 
     @set_interval(2)
     def interval_translate_clipboard(self):
-        self.word = pyperclip.paste()
+        if self.is_enter == False:
+            if self.is_disable_auto == True:
+                return
+            self.word = pyperclip.paste()
         if not self.word or self.old_word == self.word:
             return
         self.old_word = self.word
@@ -59,6 +79,10 @@ class AppPanel(wx.Panel):
         self.browser_cambridge.SetPage(str(soup), url)
         url, soup = self.translate(DICTS[WEBSTER])
         self.browser_webster.SetPage(str(soup), url)
+        
+        # reset enter button
+        if self.is_enter == True:
+            self.is_enter = False
 
     def translate(self, dictionary):
         con = sqlite3.connect(
@@ -76,6 +100,16 @@ class AppPanel(wx.Panel):
 
         return url, soup
 
+    def OnEnterPressed(self, event):
+        self.word = event.GetString()
+        self.is_enter = True
+        self.interval_translate_clipboard()
+        print(f"Enter pressed: {self.word}")
+
+    def onChecked(self, e): 
+      cb = e.GetEventObject() 
+      print(cb.GetLabel(), ' is clicked', cb.GetValue())
+      self.is_disable_auto = cb.GetValue()
 
 if __name__ == '__main__':
     app = wx.App()
