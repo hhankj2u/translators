@@ -4,8 +4,8 @@ import pyperclip
 import wx
 import wx.html2
 from core import cache
-from core.dicts import cambridge, webster
-from core.settings import DICTS, CAMBRIDGE, WEBSTER
+from core.dicts import cambridge, webster, soha
+from core.settings import DICTS, CAMBRIDGE, WEBSTER, SOHA
 
 
 # https://stackoverflow.com/a/16368571/6408343
@@ -49,17 +49,19 @@ class AppPanel(wx.Panel):
 
         self.browser_cambridge = wx.html2.WebView.New(self)
         self.browser_webster = wx.html2.WebView.New(self)
+        self.browser_soha = wx.html2.WebView.New(self)
 
         sizer_result = wx.BoxSizer(wx.HORIZONTAL)
         sizer_result.Add(self.browser_cambridge, 1, wx.EXPAND)
         sizer_result.Add(self.browser_webster, 1, wx.EXPAND)
+        sizer_result.Add(self.browser_soha, 1, wx.EXPAND)
         sizer_container.Add(sizer_result, 1, wx.EXPAND)
 
         self.SetSizer(sizer_container)        
 
         self.word = 'banana'
         self.old_word = ''
-        self.is_disable_auto = False
+        self.is_disable_auto = True # TODO:ddsfsdfsdf
 
         # init
         self.interval_translate_clipboard()
@@ -77,6 +79,8 @@ class AppPanel(wx.Panel):
         self.browser_cambridge.SetPage(str(soup), url)
         url, soup = self.translate(DICTS[WEBSTER])
         self.browser_webster.SetPage(str(soup), url)
+        url, soup = self.translate(DICTS[SOHA])
+        self.browser_soha.SetPage(str(soup), url)
     
     def translate(self, dictionary):
         con = sqlite3.connect(
@@ -86,8 +90,10 @@ class AppPanel(wx.Panel):
 
         if dictionary == DICTS[CAMBRIDGE]:
             url, soup = cambridge.search_cambridge(con, cur, self.word)
-        else:
+        elif dictionary == DICTS[WEBSTER]:
             url, soup = webster.search_webster(con, cur, self.word)
+        elif dictionary == DICTS[SOHA]:
+            url, soup = soha.search_soha(con, cur, self.word)
 
         cur.close()
         con.close()
