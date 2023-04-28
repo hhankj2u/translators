@@ -61,7 +61,7 @@ class AppPanel(wx.Panel):
 
         self.word = 'banana'
         self.old_word = ''
-        self.is_disable_auto = True # TODO:ddsfsdfsdf
+        self.is_disable_auto = False
 
         # init
         self.interval_translate_clipboard()
