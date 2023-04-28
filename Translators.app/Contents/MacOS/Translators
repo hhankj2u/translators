@@ -1,0 +1,2 @@
+#!/bin/bash
+.../translators/.venv/bin/python .../translators/main.py &
